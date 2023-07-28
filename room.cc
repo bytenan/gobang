@@ -43,13 +43,13 @@ Json::Value Room::ChessHandler(const Json::Value &req) {
         resp["winner_id"] = 0;
         return resp;
     }
-    int color = board_[row][col] = (req["uid"].asUint64() == black_id_ ? black_id_ : white_id_);
-    uint64_t winnner_id = WinnerIdIfHas(row, col, color);
+    int color = board_[row][col] = (req["uid"].asUInt64() == black_id_ ? black_id_ : white_id_);
+    uint64_t winner_id = WinnerIdIfHas(row, col, color);
     if (0 != winner_id) {
         resp["reason"] = "五星连珠，战无敌！";
     }
     resp["result"] = true;
-    resp["winner_id"] = (Json::UInt64)winnner_id;
+    resp["winner_id"] = (Json::UInt64)winner_id;
     return resp;
 }
 
@@ -68,14 +68,14 @@ Json::Value Room::ChatHandler(const Json::Value &req) {
 
 void Room::RequestHandler(const Json::Value &req) {
     Json::Value resp;
-    if ("chess" == req["optype"]) {
+    if ("chess" == req["optype"].asString()) {
         resp = ChessHandler(req);
-        winner_id = resp["winner_id"].asUInt64();
+        uint64_t winner_id = resp["winner_id"].asUInt64();
         if (0 != winner_id) {
             im_->Winner(winner_id == white_id_ ? white_id_ : black_id_);
             im_->Loser(winner_id == white_id_ ? black_id_ : white_id_);
         }
-    } else if ("chat" == req["optype"]) {
+    } else if ("chat" == req["optype"].asString()) {
         resp = ChatHandler(req);
     } else {
         resp["optype"] = "unknow";
@@ -151,7 +151,7 @@ RoomPtr RoomManager::CreateRoom(uint64_t uid1, uint64_t uid2) {
         LOG("Uid2 %lu is not in hall.", uid2);
         return RoomPtr();
     }
-    std::unique_lock(std::mutex) lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     RoomPtr rp(new Room(next_rid_, im_, om_));
     rp->set_black_id(uid1);
     rp->set_white_id(uid2);
@@ -163,8 +163,8 @@ RoomPtr RoomManager::CreateRoom(uint64_t uid1, uint64_t uid2) {
 }
 
 RoomPtr RoomManager::RoomByRid(uint64_t rid) {
-    std::unique_lock(std::mutex) lock(mutex_);
-    auto it = rooms_.find(uid);
+    std::unique_lock<std::mutex> lock(mutex_);
+    auto it = rooms_.find(rid);
     if (rooms_.end() == it) {
         return RoomPtr();
     }
@@ -172,7 +172,7 @@ RoomPtr RoomManager::RoomByRid(uint64_t rid) {
 }
 
 RoomPtr RoomManager::RoomByUid(uint64_t uid) {
-    std::unique_lock(std::mutex) lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     auto rid_it = rids_.find(uid);
     if (rids_.end() == rid_it) {
         return RoomPtr();
@@ -189,14 +189,14 @@ void RoomManager::DestoryRoomByRid(uint64_t rid) {
     if (nullptr == rp.get()) {
         return;
     }
-    std::unique_lock(std::mutex) lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     rids_.erase(rp->white_id());
     rids_.erase(rp->black_id());
     rooms_.erase(rid);
 }
 
 void RoomManager::RemoveUserFromRoom(uint64_t uid) {
-    RoomPtr rp = RoomByRid(rid);
+    RoomPtr rp = RoomByUid(uid);
     if (nullptr == rp.get()) {
         return;
     }

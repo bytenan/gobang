@@ -2,12 +2,12 @@
 
 void OnlineManager::InHall(uint64_t uid, wsserver_t::connection_ptr &conn) {
     std::unique_lock<std::mutex> lock(mutex_);
-    hall_.insert(uid, conn);
+    hall_.insert(std::make_pair(uid, conn));
 }
 
 void OnlineManager::InRoom(uint64_t uid, wsserver_t::connection_ptr &conn) {
     std::unique_lock<std::mutex> lock(mutex_);
-    room_.insert(uid, conn);
+    room_.insert(std::make_pair(uid, conn));
 }
 
 void OnlineManager::OutHall(uint64_t uid) {

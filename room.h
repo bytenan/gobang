@@ -51,7 +51,7 @@ private:
     std::vector<std::vector<int>> board_;
 };
 
-typedef std::unique_ptr<Room> RoomPtr;
+typedef std::shared_ptr<Room> RoomPtr;
 class RoomManager {
 public:
     RoomManager(InfoManager *im, OnlineManager *om)

@@ -1,5 +1,5 @@
-#ifndef __Info_H__
-#define __Info_H__
+#ifndef __INFO_H__
+#define __INFO_H__
 
 #include <cassert>
 
@@ -35,4 +35,4 @@ private:
     std::mutex mutex_;
 };
 
-#endif //__Info_H__
+#endif //__INFO_H__
