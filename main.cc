@@ -1,6 +1,14 @@
 #include <iostream>
 
-#include "info.h"
+// #include "info.h"
+
+// #include "online.h"
+
+// #include "room.h"
+
+// #include "session.h"
+
+#include "match.h"
 
 // void TestMysql() {
 //     MYSQL *mysql = UtilMysql::Create(HOST, PORT, USER, PASSWORD, DATABASE, CSNAME);
@@ -37,41 +45,41 @@
 //     }
 // }
 
-void TestInfo() {
-    InfoManager im;
-    // Json::Value root;
-    // root["username"] = "xiaowang";
-    // root["password"] = "123456";
-    // im.Register(root);
+// void TestInfo() {
+//     InfoManager im;
+//     // Json::Value root;
+//     // root["username"] = "xiaowang";
+//     // root["password"] = "123456";
+//     // im.Register(root);
 
-    // im.Login(&root);
-    // std::cout << root["uid"] << std::endl;
-    // std::cout << root["total_games"] << std::endl;
-    // std::cout << root["total_wins"] << std::endl;
-    // std::cout << root["score"] << std::endl;
+//     // im.Login(&root);
+//     // std::cout << root["uid"] << std::endl;
+//     // std::cout << root["total_games"] << std::endl;
+//     // std::cout << root["total_wins"] << std::endl;
+//     // std::cout << root["score"] << std::endl;
     
-    // std::string username = "xiaowang";
-    // Json::Value dest;
-    // im.GetInfoByUsername(username, &dest);
-    // std::cout << dest["uid"] << std::endl;
-    // std::cout << dest["username"] << std::endl;
-    // std::cout << dest["total_games"] << std::endl;
-    // std::cout << dest["total_wins"] << std::endl;
-    // std::cout << dest["score"] << std::endl;
+//     // std::string username = "xiaowang";
+//     // Json::Value dest;
+//     // im.GetInfoByUsername(username, &dest);
+//     // std::cout << dest["uid"] << std::endl;
+//     // std::cout << dest["username"] << std::endl;
+//     // std::cout << dest["total_games"] << std::endl;
+//     // std::cout << dest["total_wins"] << std::endl;
+//     // std::cout << dest["score"] << std::endl;
 
-    // uint64_t uid = 4;
-    // Json::Value dest;
-    // im.GetInfoByUid(uid, &dest);
-    // std::cout << dest["uid"] << std::endl;
-    // std::cout << dest["username"] << std::endl;
-    // std::cout << dest["total_games"] << std::endl;
-    // std::cout << dest["total_wins"] << std::endl;
-    // std::cout << dest["score"] << std::endl;
+//     // uint64_t uid = 4;
+//     // Json::Value dest;
+//     // im.GetInfoByUid(uid, &dest);
+//     // std::cout << dest["uid"] << std::endl;
+//     // std::cout << dest["username"] << std::endl;
+//     // std::cout << dest["total_games"] << std::endl;
+//     // std::cout << dest["total_wins"] << std::endl;
+//     // std::cout << dest["score"] << std::endl;
 
-    uint64_t uid = 4;
-    // im.Winner(uid);
-    im.Loser(uid);
-}
+//     uint64_t uid = 4;
+//     // im.Winner(uid);
+//     im.Loser(uid);
+// }
 
 int main() {
 
