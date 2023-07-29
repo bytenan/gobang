@@ -143,11 +143,11 @@ bool Room::IsWin(int row, int col, int row_offset, int col_offset, int color) {
 }
 
 RoomPtr RoomManager::CreateRoom(uint64_t uid1, uint64_t uid2) {
-    if(!om_->IsinHall(uid1)) {
+    if(!om_->IsInHall(uid1)) {
         LOG("Uid1 %lu is not in hall.", uid1);
         return RoomPtr();
     }
-    if(!om_->IsinHall(uid2)) {
+    if(!om_->IsInHall(uid2)) {
         LOG("Uid2 %lu is not in hall.", uid2);
         return RoomPtr();
     }
