@@ -8,7 +8,9 @@
 
 // #include "session.h"
 
-#include "match.h"
+// #include "match.h"
+
+#include "server.h"
 
 // void TestMysql() {
 //     MYSQL *mysql = UtilMysql::Create(HOST, PORT, USER, PASSWORD, DATABASE, CSNAME);
@@ -84,6 +86,9 @@
 int main() {
 
     // TestInfo();
+
+    GobangServer gs;
+    gs.run(8080);
 
     return 0;
 }

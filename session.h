@@ -8,12 +8,19 @@
 #include <websocketpp/server.hpp>
 #include <websocketpp/config/asio_no_tls.hpp>
 
+#include "log.h"
+
 typedef websocketpp::server<websocketpp::config::asio> wsserver_t;
 typedef enum { SESSION_LOGIN, SESSION_UNLOGIN } SessionStatu;
 
 class Session {
 public:
-    Session(uint64_t ssid) : ssid_(ssid) {}
+    Session(uint64_t ssid) : ssid_(ssid) {
+        LOG("Created a session with ssid:%d.", ssid_);
+    }
+    ~Session() {
+        LOG("Destoryed a session with ssid:%d.", ssid_);
+    }
     uint64_t ssid();
     uint64_t uid();
     void set_uid(uint64_t uid);

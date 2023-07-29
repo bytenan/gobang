@@ -62,17 +62,16 @@ void SessionManager::SetSessionExpireTime(uint64_t ssid, int ms) {
     if (nullptr == ssp.get()) {
         return;
     }
-    if (nullptr == ssp.get() && SESSION_FOROVER == ms) {
+    wsserver_t::timer_ptr timer = ssp->timer();
+    if (nullptr == timer.get() && SESSION_FOROVER == ms) {
         return;
-    } else if (nullptr == ssp.get() && SESSION_FOROVER != ms) {
+    } else if (nullptr == timer.get() && SESSION_FOROVER != ms) {
         ssp->set_timer(server_->set_timer(ms, std::bind(&SessionManager::RemoveSession, this, ssid)));
-    } else if (nullptr != ssp.get() && SESSION_FOROVER == ms) {
-        wsserver_t::timer_ptr timer = ssp->timer();
+    } else if (nullptr != timer.get() && SESSION_FOROVER == ms) {
         timer->cancel();
         ssp->set_timer(wsserver_t::timer_ptr());
         server_->set_timer(0, std::bind(&SessionManager::AppendSession, this, ssp));
-    } else if (nullptr != ssp.get() && SESSION_FOROVER != ms) {
-        wsserver_t::timer_ptr timer = ssp->timer();
+    } else if (nullptr != timer.get() && SESSION_FOROVER != ms) {
         timer->cancel();
         ssp->set_timer(wsserver_t::timer_ptr());
         server_->set_timer(0, std::bind(&SessionManager::AppendSession, this, ssp));

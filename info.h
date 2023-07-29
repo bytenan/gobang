@@ -7,17 +7,12 @@
 
 #include "util.h"
 
-#define HOST "127.0.0.1"
-#define PORT 3306
-#define USER "root"
-#define PASSWORD "Wang2923944542"
-#define DATABASE "gobang"
-#define CSNAME "utf8"
-
 class InfoManager {
 public:
-    InfoManager() : mysql_(nullptr) {
-        mysql_ = UtilMysql::Create(HOST, PORT, USER, PASSWORD, DATABASE, CSNAME);
+    InfoManager(const std::string &host, uint16_t port, const std::string &user, 
+                const std::string &password, const std::string &database, const std::string &csname)
+        : mysql_(nullptr) {
+        mysql_ = UtilMysql::Create(host, port, user, password, database, csname);
         assert(nullptr != mysql_);
     }
     ~InfoManager() {

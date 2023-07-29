@@ -11,8 +11,6 @@ bool InfoManager::Register(const Json::Value &root) {
     char sql[4096] = { 0 };
     sprintf(sql, REGISTER_FORMAT, root["username"].asCString(), root["password"].asCString());    
     if (!UtilMysql::Execute(mysql_, sql)) {
-        //TODO:该日志应该写到外层去
-        LOG("Username %s already exists.", root["username"].asCString());
         return false;
     }
     return true;
@@ -28,8 +26,6 @@ bool InfoManager::Login(Json::Value *root) {
         res = mysql_store_result(mysql_);
     }
     if (0 == mysql_num_rows(res)) {
-        //TODO:该日志应该写到外层去
-        LOG("Username %s or password %s is incorrect.", (*root)["username"].asCString(), (*root)["password"].asCString());
         return false;
     }
     MYSQL_ROW row = mysql_fetch_row(res);
@@ -50,8 +46,6 @@ bool InfoManager::GetInfoByUsername(const std::string &username, Json::Value *ro
         res = mysql_store_result(mysql_);
     }
     if (0 == mysql_num_rows(res)) {
-        //TODO:该日志应该写到外层去
-        LOG("Username %s is incorrect.", username.c_str());
         return false;
     }
     MYSQL_ROW row = mysql_fetch_row(res);
@@ -73,8 +67,6 @@ bool InfoManager::GetInfoByUid(uint64_t uid, Json::Value *root) {
         res = mysql_store_result(mysql_);
     }
     if (0 == mysql_num_rows(res)) {
-        //TODO:该日志应该写到外层去
-        LOG("Uid %lu is incorrect.", uid);
         return false;
     }
     MYSQL_ROW row = mysql_fetch_row(res);

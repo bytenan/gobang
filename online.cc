@@ -20,12 +20,12 @@ void OnlineManager::OutRoom(uint64_t uid) {
     room_.erase(uid);
 }
 
-bool OnlineManager::IsinHall(uint64_t uid) {
+bool OnlineManager::IsInHall(uint64_t uid) {
     std::unique_lock<std::mutex> lock(mutex_);
     return hall_.end() != hall_.find(uid);
 }
 
-bool OnlineManager::IsinRoom(uint64_t uid) {
+bool OnlineManager::IsInRoom(uint64_t uid) {
     std::unique_lock<std::mutex> lock(mutex_);
     return room_.end() != room_.find(uid);
 }

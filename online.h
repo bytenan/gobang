@@ -15,8 +15,8 @@ public:
     void InRoom(uint64_t uid, wsserver_t::connection_ptr &conn);
     void OutHall(uint64_t uid);
     void OutRoom(uint64_t uid);
-    bool IsinHall(uint64_t uid);
-    bool IsinRoom(uint64_t uid);
+    bool IsInHall(uint64_t uid);
+    bool IsInRoom(uint64_t uid);
     wsserver_t::connection_ptr GetConnFromHall(uint64_t uid);
     wsserver_t::connection_ptr GetConnFromRoom(uint64_t uid);
 private:
