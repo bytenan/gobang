@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏大厅</title>
+    <link rel="stylesheet" href="./css/common.css">
+    <link rel="stylesheet" href="./css/game_hall.css">
+</head>
+<body>
+    <div class="nav">网络五子棋对战游戏</div>
+    <!-- 整个页面的容器元素 -->
+    <div class="container">
+        <!-- 这个 div 在 container 中是处于垂直水平居中这样的位置的 -->
+        <div>
+            <!-- 展示用户信息 -->
+            <div id="screen"></div>
+            <!-- 匹配按钮 -->
+            <div id="match-button">开始匹配</div>
+        </div>
+    </div>
+
+    <script src="./js/jquery.min.js"></script>
+    <script>
+        var ws_url = "ws://" + location.host + "/hall";
+        var ws_hdl = null;
+        window.onbeforeunload = function() {
+            ws_hdl.close();
+        }
+
+        function get_info() {
+            $.ajax({
+                url : "/info",
+                type : "get",
+                success : function(res) {
+                    var info_html = "<p>" + "用户：" + res.username + " 积分：" + res.score + 
+                        "</br>" + "游戏场次：" + res.total_games + " 胜利场次：" + res.total_wins + "</p>";
+                    var screen_div = document.getElementById("screen");
+                    screen_div.innerHTML = info_html;
+
+                    ws_hdl = new WebSocket(ws_url);
+                    ws_hdl.onopen = ws_onopen;
+                    ws_hdl.onclose = ws_onclose;
+                    ws_hdl.onerror = ws_onerror;
+                    ws_hdl.onmessage = ws_onmessage;
+                },
+                error : function(xhr) {
+                    var resp_json = JSON.parse(xhr.responseText);
+                    alert(resp_json["reason"]);
+                    window.location.assign("/login.html");
+                }
+            })
+        }
+        function ws_onopen() {
+            console.log("websocket onopen");
+        }
+        function ws_onclose() {
+            console.log("websocket onclose");
+        }       
+        function ws_onerror() {
+            console.log("websocket onerror");
+        }
+        function ws_onmessage(evt) {
+            var resp_json = JSON.parse(evt.data);
+            if (resp_json["optype"] == "hall_ready") {
+                alert(resp_json["result"]);
+            } else if (resp_json["optype"] == "hall_unready") {
+                alert(resp_json["result"]);
+                window.location.assign("/login.html");
+            }
+        }
+        get_info();
+    </script>
+</body>
+</html>

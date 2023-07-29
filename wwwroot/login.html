@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录</title>
+
+    <link rel="stylesheet" href="./css/common.css">
+    <link rel="stylesheet" href="./css/login.css">
+</head>
+<body>
+    <div class="nav">
+        网络五子棋对战游戏
+    </div>
+    <div class="login-container">
+        <!-- 登录界面的对话框 -->
+        <div class="login-dialog">
+            <!-- 提示信息 -->
+            <h3>登录</h3>
+            <!-- 这个表示一行 -->
+            <div class="row">
+                <span>用户名</span>
+                <input type="text" id="username">
+            </div>
+            <!-- 这是另一行 -->
+            <div class="row">
+                <span>密码</span>
+                <input type="password" id="password">
+            </div>
+            <!-- 提交按钮 -->
+            <div class="row">
+                <button id="submit" onclick="login()">提交</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="./js/jquery.min.js"></script>
+    <script>
+        // 给按钮添加点击事件，调用注册函数
+        // 封装实现注册函数
+        function login() {
+            // 实例化一个json对象获取输入框中的数据
+            var reg_info = {
+                username: document.getElementById("username").value,
+                password: document.getElementById("password").value
+            };
+            // 通过ajax向后台发送注册请求
+            $.ajax({
+                url : "/login",
+                type : "post", 
+                data : JSON.stringify(reg_info),
+                success : function(res) {
+                    // 如果成功，跳转到登陆页面
+                    alert(res.reason);
+                    window.location.assign("/game_hall.html");
+                },
+                error : function(xhr) {
+                    // 如果失败，清空输入框内容，并弹窗提醒
+                    var resp_json = JSON.parse(xhr.responseText);
+                    alert(resp_json["reason"]);
+                    document.getElementById("username").value = "";
+                    document.getElementById("password").value = "";
+                }
+            })
+        }
+    </script>
+</body>
+</html>
