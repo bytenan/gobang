@@ -1,6 +1,6 @@
 #include "info.h"
 
-#define REGISTER_FORMAT "insert user values (null, '%s', password('%s'), 1000, 0, 0)"
+#define REGISTER_FORMAT "insert user values (null, '%s', password('%s'), 0, 0, 1000)"
 #define LOGIN_FORMAT "select uid, total_games, total_wins, score from user where username='%s' and password=password('%s');"
 #define GETINFOBYUSERNAME_FORMAT "select uid, total_games, total_wins, score from user where username='%s';"
 #define GETINFOBYUID_FORMAT "select username, total_games, total_wins, score from user where uid=%d;"

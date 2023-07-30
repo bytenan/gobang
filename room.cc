@@ -27,42 +27,37 @@ void Room::set_black_id(uint64_t black_id) {
 }
 
 Json::Value Room::ChessHandler(const Json::Value &req) {
-    Json::Value resp;
-    resp["optype"] = "chess";
+    Json::Value resp = req;
     int row = req["row"].asInt();
     int col = req["col"].asInt();
     if (!(0 <= row && row < BOARD_ROW && 0 <= col && col < BOARD_COL)) {
-        resp["result"] = false;
-        resp["reason"] = "该位置不允许下棋！";
+        resp["result"] = "该位置不允许下棋！";
         resp["winner_id"] = 0;
         return resp;
     }
     if (0 != board_[row][col]) {
-        resp["result"] = false;
-        resp["reason"] = "该位置已有棋子！";
+        resp["result"] = "该位置已有棋子！";
         resp["winner_id"] = 0;
         return resp;
     }
     int color = board_[row][col] = (req["uid"].asUInt64() == black_id_ ? black_id_ : white_id_);
     uint64_t winner_id = WinnerIdIfHas(row, col, color);
     if (0 != winner_id) {
-        resp["reason"] = "五星连珠，战无敌！";
+        resp["result"] = "五星连珠，战无敌！";
     }
-    resp["result"] = true;
     resp["winner_id"] = (Json::UInt64)winner_id;
     return resp;
 }
 
 Json::Value Room::ChatHandler(const Json::Value &req) {
-    Json::Value resp;
-    resp["optype"] = "chat";
+    Json::Value resp = req;
     std::string message = req["message"].asString();
     if (std::string::npos != message.find("垃圾")) {
         resp["result"] = false;
         resp["reason"] = "存在敏感词汇";
         return resp;
     }
-    resp["result"] = true;
+    resp["reason"] = true;
     return resp;
 }
 
@@ -79,8 +74,7 @@ void Room::RequestHandler(const Json::Value &req) {
         resp = ChatHandler(req);
     } else {
         resp["optype"] = "unknow";
-        resp["result"] = false;
-        resp["reason"] = "未知操作类型";
+        resp["result"] = "未知操作类型";
     }
     Boardcast(resp);
 }
@@ -93,8 +87,8 @@ void Room::ExitHandler(uint64_t uid) {
         im_->Winner(winner_id);
         im_->Loser(loser_id);
         statu_ = GAME_OVER;
-        resp["result"] = true;
-        resp["reason"] = "对方离线，不战而胜";
+        resp["optype"] = "exit";
+        resp["result"] = "对方离线，不战而胜";
         resp["winner_id"] = (Json::UInt64)winner_id;
         Boardcast(resp);
     }
@@ -112,17 +106,19 @@ void Room::Boardcast(const Json::Value &resp) {
 }
 
 uint64_t Room::WinnerIdIfHas(int row, int col, int color) {
-    if (IsWin(row, col, 0, 1, color) || IsWin(row, col, 1, 0, color) || 
-        IsWin(row, col, 1, 1, color) || IsWin(row, col, 1, -1, color)) {
+    if (IsWin(row, col, 0, 1, color) ||
+        IsWin(row, col, 1, 0, color) || 
+        IsWin(row, col, -1, 1, color) || 
+        IsWin(row, col, -1, -1, color)) {
         return color == white_id_ ? white_id_ : black_id_;
     }
     return 0;
 }
 
 bool Room::IsWin(int row, int col, int row_offset, int col_offset, int color) {
-    int count = 0;
-    int search_row = row;
-    int search_col = col;
+    int count = 1;
+    int search_row = row + row_offset;
+    int search_col = col + col_offset;
     while (0 <= search_row && search_row < BOARD_ROW && 
            0 <= search_col && search_col < BOARD_COL && 
            color == board_[search_row][search_col]) {
@@ -130,8 +126,8 @@ bool Room::IsWin(int row, int col, int row_offset, int col_offset, int color) {
         search_col += col_offset;
         ++count;
     }
-    search_row = row;
-    search_col = col;
+    search_row = row - row_offset;
+    search_col = col - col_offset;
     while (0 <= search_row && search_row < BOARD_ROW && 
            0 <= search_col && search_col < BOARD_COL && 
            color == board_[search_row][search_col]) {

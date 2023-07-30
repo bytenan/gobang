@@ -28,6 +28,22 @@
         window.onbeforeunload = function() {
             ws_hdl.close();
         }
+        
+        var match_statu = "stop";
+        var match_event = document.getElementById("match-button");
+        match_event.onclick = function() {
+            if (match_statu == "stop") {
+                var req_json = {
+                    optype: "match_start"
+                }
+                ws_hdl.send(JSON.stringify(req_json));
+            } else {
+                var req_json = {
+                    optype: "match_stop"
+                }
+                ws_hdl.send(JSON.stringify(req_json));
+            }
+        }
 
         function get_info() {
             $.ajax({
@@ -65,10 +81,18 @@
             var resp_json = JSON.parse(evt.data);
             if (resp_json["optype"] == "hall_ready") {
                 alert(resp_json["result"]);
-            } else if (resp_json["optype"] == "hall_unready") {
+            } else if (resp_json["optype"] == "match_start") {
+                console.log("start");
+                match_statu = "start";
+                match_event.innerHTML = "匹配中...点击按钮停止匹配";
+            } else if (resp_json["optype"] == "match_stop") {
+                console.log("stop");
+                match_statu = "stop";
+                match_event.innerHTML = "开始匹配";
+            } else if (resp_json["optype"] == "match_success") {
                 alert(resp_json["result"]);
-                window.location.assign("/login.html");
-            }
+                window.location.assign("/game_room.html");
+            } 
         }
         get_info();
     </script>

@@ -50,10 +50,10 @@ private:
 
     void CloseHallHandler(wsserver_t::connection_ptr &conn);
     void CloseRoomHandler(wsserver_t::connection_ptr &conn);
-
-    void MessageHallHandler(wsserver_t::connection_ptr &conn);
-    void MessageRoomHandler(wsserver_t::connection_ptr &conn);
     void CloseHandler(websocketpp::connection_hdl hdl);
+
+    void MessageHallHandler(wsserver_t::connection_ptr &conn, wsserver_t::message_ptr msg);
+    void MessageRoomHandler(wsserver_t::connection_ptr &conn, wsserver_t::message_ptr msg);
     void MessageHandler(websocketpp::connection_hdl hdl, wsserver_t::message_ptr msg);
 private:
     wsserver_t server_;

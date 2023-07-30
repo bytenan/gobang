@@ -99,7 +99,7 @@ void QueueManager::MatchHandler(Queue &queue) {
         }
         Json::Value resp;
         resp["optype"] = "match_success";
-        resp["result"] = true;
+        resp["result"] = "The match was successful";
         std::string body;
         UtilJson::Serialize(resp, &body);
         conn1->send(body);

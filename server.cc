@@ -83,6 +83,10 @@ void GobangServer::LoginHandler(wsserver_t::connection_ptr &conn) {
         return HttpResponse(conn, "Username or password is incorrect.", websocketpp::http::status_code::bad_request);
     }
     uint64_t uid = req_json["uid"].asUInt64();
+    if (om_.IsInRoom(uid) || om_.IsInHall(uid)) {
+        LOG("Do not log in repeatedly.");
+        return HttpResponse(conn, "Do not log in repeatedly.", websocketpp::http::status_code::bad_request);
+    }
     SessionPtr ssp = sm_.CreateSession(uid, SESSION_LOGIN);
     if (nullptr == ssp.get()) {
         LOG("Create session fail.");
@@ -154,14 +158,9 @@ void WsResponse(wsserver_t::connection_ptr &conn, const std::string &type, const
 }
 
 void GobangServer::OpenHallHandler(wsserver_t::connection_ptr &conn){
-    //TODO:判断是否重复登录的逻辑应该放在登录模块
     std::string cookie = conn->get_request_header("Cookie");
     std::string ssid = GetValFromCookie(cookie, "SSID");
     SessionPtr ssp = sm_.SessionBySsid(std::atol(ssid.c_str()));
-    if (om_.IsInRoom(ssp->uid()) || om_.IsInHall(ssp->uid())) {
-        LOG("Do not log in repeatedly.");
-        return WsResponse(conn, "hall_unready", "Do not log in repeatedly.");
-    }
     om_.InHall(ssp->uid(), conn);
     sm_.SetSessionExpireTime(ssp->ssid(), SESSION_FOROVER);
     LOG("Successfully enter the game lobby.");
@@ -169,6 +168,23 @@ void GobangServer::OpenHallHandler(wsserver_t::connection_ptr &conn){
 }
 void GobangServer::OpenRoomHandler(wsserver_t::connection_ptr &conn){
     //TODO:
+    std::string cookie = conn->get_request_header("Cookie");
+    std::string ssid = GetValFromCookie(cookie, "SSID");
+    SessionPtr ssp = sm_.SessionBySsid(std::atol(ssid.c_str()));
+    om_.InRoom(ssp->uid(), conn);
+    sm_.SetSessionExpireTime(ssp->ssid(), SESSION_FOROVER);
+    LOG("Successfully enter the game room.");
+    RoomPtr rp = rm_.RoomByUid(ssp->uid());
+    Json::Value resp_json;
+    resp_json["optype"] = "room_ready";
+    resp_json["result"] = "Successfully enter the game room.";
+    resp_json["rid"] = (Json::UInt64)rp->rid();
+    resp_json["uid"] = (Json::UInt64)ssp->uid();
+    resp_json["white_id"] = (Json::UInt64)rp->white_id();
+    resp_json["black_id"] = (Json::UInt64)rp->black_id();
+    std::string body;
+    UtilJson::Serialize(resp_json, &body);
+    conn->send(body);
 }
 void GobangServer::OpenHandler(websocketpp::connection_hdl hdl) {
     wsserver_t::connection_ptr conn = server_.get_con_from_hdl(hdl);
@@ -182,7 +198,6 @@ void GobangServer::OpenHandler(websocketpp::connection_hdl hdl) {
 }
 
 void GobangServer::CloseHallHandler(wsserver_t::connection_ptr &conn){
-    //TODO:
     std::string cookie = conn->get_request_header("Cookie");
     std::string ssid = GetValFromCookie(cookie, "SSID");
     SessionPtr ssp = sm_.SessionBySsid(std::atol(ssid.c_str()));
@@ -191,6 +206,12 @@ void GobangServer::CloseHallHandler(wsserver_t::connection_ptr &conn){
 }
 void GobangServer::CloseRoomHandler(wsserver_t::connection_ptr &conn){
     //TODO:
+    std::string cookie = conn->get_request_header("Cookie");
+    std::string ssid = GetValFromCookie(cookie, "SSID");
+    SessionPtr ssp = sm_.SessionBySsid(std::atol(ssid.c_str()));
+    om_.OutRoom(ssp->uid());
+    rm_.RemoveUserFromRoom(ssp->uid());
+    sm_.SetSessionExpireTime(ssp->ssid(), SESSION_TIMEOUT);
 }
 void GobangServer::CloseHandler(websocketpp::connection_hdl hdl) {
     wsserver_t::connection_ptr conn = server_.get_con_from_hdl(hdl);
@@ -203,19 +224,36 @@ void GobangServer::CloseHandler(websocketpp::connection_hdl hdl) {
     }
 }
 
-void GobangServer::MessageHallHandler(wsserver_t::connection_ptr &conn) {
-    //TODO:
+void GobangServer::MessageHallHandler(wsserver_t::connection_ptr &conn, wsserver_t::message_ptr msg) {
+    std::string cookie = conn->get_request_header("Cookie");
+    std::string ssid = GetValFromCookie(cookie, "SSID");
+    SessionPtr ssp = sm_.SessionBySsid(std::atol(ssid.c_str()));
+    std::string req_str = msg->get_payload();
+    Json::Value req_json;
+    UtilJson::Parse(req_str, &req_json);
+    if ("match_start" == req_json["optype"].asString()) {
+        qm_.Add(ssp->uid());
+        return WsResponse(conn, "match_start", "Start matching");
+    } else if ("match_stop" == req_json["optype"].asString()) {
+        qm_.Del(ssp->uid());
+        return WsResponse(conn, "match_stop", "Stop matching");
+    }
 }
-void GobangServer::MessageRoomHandler(wsserver_t::connection_ptr &conn) {
+void GobangServer::MessageRoomHandler(wsserver_t::connection_ptr &conn, wsserver_t::message_ptr msg) {
     //TODO:
+    std::string req_str = msg->get_payload();
+    Json::Value req_json;
+    UtilJson::Parse(req_str, &req_json);
+    RoomPtr rp = rm_.RoomByRid(req_json["rid"].asUInt64());
+    rp->RequestHandler(req_json);
 }
 void GobangServer::MessageHandler(websocketpp::connection_hdl hdl, wsserver_t::message_ptr msg) {
     wsserver_t::connection_ptr conn = server_.get_con_from_hdl(hdl);
     websocketpp::http::parser::request req = conn->get_request();
     std::string uri = req.get_uri();
     if (uri == "/hall") {
-        return MessageHallHandler(conn);
+        return MessageHallHandler(conn, msg);
     } else if (uri == "/room") {
-        return MessageRoomHandler(conn);
+        return MessageRoomHandler(conn, msg);
     }
 }
