@@ -41,6 +41,7 @@
         }
         var is_me;
         var is_white;
+        var is_win = false;
         var room_info;
 
         let chessBoard = [];
@@ -74,7 +75,7 @@
             for (let i = 0; i < BOARD_ROW_AND_COL; i++) {
                 //横向的线条
                 context.moveTo(15 + i * 30, 15);
-                context.lineTo(15 + i * 30, 430); 
+                context.lineTo(15 + i * 30, 435); 
                 context.stroke();
                 //纵向的线条
                 context.moveTo(15, 15 + i * 30);
@@ -103,6 +104,9 @@
         }
         //棋盘区域的点击事件
         chess.onclick = function (e) {
+            if (is_win) {
+                return;
+            }
             if (!is_me) {
                 alert("等待对方走棋...");
                 return;
@@ -155,6 +159,14 @@
                 is_me = info["uid"] == info["white_id"] ? true : false;
                 set_screen(is_me);
                 initGame();
+            } else if (info["optype"] == "room_unready") {
+                alert(info["result"]);
+                ws_hdl.close();
+                location.replace("/game_hall.html");
+            } else if (info["optype"] == "session_unready") {
+                alert(info["result"]);
+                ws_hdl.close();
+                location.replace("/login.html");
             } else if (info["optype"] == "exit") {
                 alert(info["result"]);
                 var screen_div = document.getElementById("screen");
@@ -170,15 +182,21 @@
                 if (info["winner_id"] == 0) {
                     return;
                 } 
+                is_win = true;
                 var screen_div = document.getElementById("screen");
-                screen_div.innerHTML = "游戏结束";
                 if (info["winner_id"] == room_info["uid"]) {
-                    alert(info["result"]);
+                    screen_div.innerHTML = info["result"];
                 } else {
-                    alert("你输了，小垃圾！");
+                    screen_div.innerHTML = "你输了,小垃圾！";
                 }
-                ws_hdl.close();
-                location.replace("/game_hall.html");
+                var return_div = document.createElement("div");
+                return_div.innerHTML = "返回大厅";
+                return_div.setAttribute("id", "return");
+                chess_area.appendChild(return_div);
+                return_div.onclick = function() {
+                    ws_hdl.close();
+                    location.replace("/game_hall.html");
+                }
             } else if (info["optype"] == "chat") {
                 if (info["result"] == false) {
                     alert(info["reason"]);

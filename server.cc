@@ -99,7 +99,7 @@ void GobangServer::LoginHandler(wsserver_t::connection_ptr &conn) {
     HttpResponse(conn, "Login successful.", websocketpp::http::status_code::ok);
 }
 
-std::string GobangServer::GetValFromCookie(const std::string &cookie, const std::string &key) {
+bool GobangServer::GetValFromCookie(const std::string &cookie, const std::string &key, std::string *result) {
     std::vector<std::string> cookie_array;
     UtilString::Split(cookie, "; ", &cookie_array);
     std::vector<std::string> temp;
@@ -108,20 +108,36 @@ std::string GobangServer::GetValFromCookie(const std::string &cookie, const std:
         UtilString::Split(str, "=", &temp);
         if (temp.size() != 2) continue;
         if (temp[0] == key) {
-            break;
+            *result = temp[1];
+            return true;
         }
     }
-    return temp[1];
+    return false;
 }
 
-void GobangServer::InfoHandler(wsserver_t::connection_ptr &conn) {
+SessionPtr GobangServer::GetSession(wsserver_t::connection_ptr &conn) {
     std::string cookie = conn->get_request_header("Cookie");
     if (cookie.empty()) {
         LOG("There are no cookies, please log in again.");
-        return HttpResponse(conn, "There are no cookies, please log in again.", websocketpp::http::status_code::internal_server_error); 
+        HttpResponse(conn, "There are no cookies, please log in again.", websocketpp::http::status_code::internal_server_error); 
+        return SessionPtr();
     }
-    std::string ssid = GetValFromCookie(cookie, "SSID");
+    std::string ssid;
+    if (!GetValFromCookie(cookie, "SSID", &ssid)) {
+        LOG("There are no ssid, please log in again.");
+        HttpResponse(conn, "There are no ssid, please log in again.", websocketpp::http::status_code::internal_server_error); 
+        return SessionPtr();
+    }
     SessionPtr ssp = sm_.SessionBySsid(std::atol(ssid.c_str()));
+    return ssp;
+}
+
+void GobangServer::InfoHandler(wsserver_t::connection_ptr &conn) {
+    SessionPtr ssp = GetSession(conn);
+    if (nullptr == ssp.get()) {
+        LOG("There are no session, please log in again.");
+        return HttpResponse(conn, "There are no session, please log in again.", websocketpp::http::status_code::internal_server_error); 
+    }
     Json::Value info_json;
     im_.GetInfoByUid(ssp->uid(), &info_json);
     std::string body;
@@ -158,23 +174,29 @@ void WsResponse(wsserver_t::connection_ptr &conn, const std::string &type, const
 }
 
 void GobangServer::OpenHallHandler(wsserver_t::connection_ptr &conn){
-    std::string cookie = conn->get_request_header("Cookie");
-    std::string ssid = GetValFromCookie(cookie, "SSID");
-    SessionPtr ssp = sm_.SessionBySsid(std::atol(ssid.c_str()));
+    SessionPtr ssp = GetSession(conn);
+    if (nullptr == ssp.get()) {
+        LOG("There are no session, please log in again.");
+        return WsResponse(conn, "hall_unready", "There are no session, please log in again."); 
+    }
     om_.InHall(ssp->uid(), conn);
     sm_.SetSessionExpireTime(ssp->ssid(), SESSION_FOROVER);
     LOG("Successfully enter the game lobby.");
     WsResponse(conn, "hall_ready", "Successfully enter the game lobby.");
 }
 void GobangServer::OpenRoomHandler(wsserver_t::connection_ptr &conn){
-    //TODO:
-    std::string cookie = conn->get_request_header("Cookie");
-    std::string ssid = GetValFromCookie(cookie, "SSID");
-    SessionPtr ssp = sm_.SessionBySsid(std::atol(ssid.c_str()));
+    SessionPtr ssp = GetSession(conn);
+    if (nullptr == ssp.get()) {
+        LOG("There are no session, please log in again.");
+        return WsResponse(conn, "session_unready", "There are no session, please log in again."); 
+    }
     om_.InRoom(ssp->uid(), conn);
     sm_.SetSessionExpireTime(ssp->ssid(), SESSION_FOROVER);
     LOG("Successfully enter the game room.");
     RoomPtr rp = rm_.RoomByUid(ssp->uid());
+    if (nullptr == rp.get()) {
+        return WsResponse(conn, "room_unready", "There are no game room, please match again."); 
+    }
     Json::Value resp_json;
     resp_json["optype"] = "room_ready";
     resp_json["result"] = "Successfully enter the game room.";
@@ -198,17 +220,18 @@ void GobangServer::OpenHandler(websocketpp::connection_hdl hdl) {
 }
 
 void GobangServer::CloseHallHandler(wsserver_t::connection_ptr &conn){
-    std::string cookie = conn->get_request_header("Cookie");
-    std::string ssid = GetValFromCookie(cookie, "SSID");
-    SessionPtr ssp = sm_.SessionBySsid(std::atol(ssid.c_str()));
+    SessionPtr ssp = GetSession(conn);
+    if (nullptr == ssp.get()) {
+        return;
+    }
     om_.OutHall(ssp->uid());
     sm_.SetSessionExpireTime(ssp->ssid(), SESSION_TIMEOUT);
 }
 void GobangServer::CloseRoomHandler(wsserver_t::connection_ptr &conn){
-    //TODO:
-    std::string cookie = conn->get_request_header("Cookie");
-    std::string ssid = GetValFromCookie(cookie, "SSID");
-    SessionPtr ssp = sm_.SessionBySsid(std::atol(ssid.c_str()));
+    SessionPtr ssp = GetSession(conn);
+    if (nullptr == ssp.get()) {
+        return;
+    }
     om_.OutRoom(ssp->uid());
     rm_.RemoveUserFromRoom(ssp->uid());
     sm_.SetSessionExpireTime(ssp->ssid(), SESSION_TIMEOUT);
@@ -225,9 +248,11 @@ void GobangServer::CloseHandler(websocketpp::connection_hdl hdl) {
 }
 
 void GobangServer::MessageHallHandler(wsserver_t::connection_ptr &conn, wsserver_t::message_ptr msg) {
-    std::string cookie = conn->get_request_header("Cookie");
-    std::string ssid = GetValFromCookie(cookie, "SSID");
-    SessionPtr ssp = sm_.SessionBySsid(std::atol(ssid.c_str()));
+    SessionPtr ssp = GetSession(conn);
+    if (nullptr == ssp.get()) {
+        LOG("There are no session, please log in again.");
+        return WsResponse(conn, "hall_unready", "There are no session, please log in again."); 
+    }
     std::string req_str = msg->get_payload();
     Json::Value req_json;
     UtilJson::Parse(req_str, &req_json);
@@ -240,7 +265,11 @@ void GobangServer::MessageHallHandler(wsserver_t::connection_ptr &conn, wsserver
     }
 }
 void GobangServer::MessageRoomHandler(wsserver_t::connection_ptr &conn, wsserver_t::message_ptr msg) {
-    //TODO:
+    SessionPtr ssp = GetSession(conn);
+    if (nullptr == ssp.get()) {
+        LOG("There are no session, please log in again.");
+        return WsResponse(conn, "room_unready", "There are no session, please log in again."); 
+    }
     std::string req_str = msg->get_payload();
     Json::Value req_json;
     UtilJson::Parse(req_str, &req_json);

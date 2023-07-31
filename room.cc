@@ -44,6 +44,7 @@ Json::Value Room::ChessHandler(const Json::Value &req) {
     uint64_t winner_id = WinnerIdIfHas(row, col, color);
     if (0 != winner_id) {
         resp["result"] = "五星连珠，战无敌！";
+        statu_ = GAME_OVER;
     }
     resp["winner_id"] = (Json::UInt64)winner_id;
     return resp;

@@ -7,8 +7,17 @@
     line-height: 50px;
     text-align: center;
 }
+#return {
+    width: 100px;
+    height: 50px;
+    margin-top: 10px;
+    background-color: #f600009b;
+    font-size: 22px;
+    line-height: 50px;
+    text-align: center;
+}
 #chat_area {
-    width: 404px;
+    width: 400px;
     height: 400px;
     margin-top: 10px;
     margin-left: 150px;

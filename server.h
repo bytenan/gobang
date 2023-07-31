@@ -40,7 +40,8 @@ private:
     void HttpResponse(wsserver_t::connection_ptr &conn, const std::string &reason, const websocketpp::http::status_code::value &code);
     void RegisterHandler(wsserver_t::connection_ptr &conn);
     void LoginHandler(wsserver_t::connection_ptr &conn);
-    std::string GetValFromCookie(const std::string &cookie, const std::string &key);
+    bool GetValFromCookie(const std::string &cookie, const std::string &key, std::string *result);
+    SessionPtr GetSession(wsserver_t::connection_ptr &conn);
     void InfoHandler(wsserver_t::connection_ptr &conn);
     void HttpHandler(websocketpp::connection_hdl hdl);
 

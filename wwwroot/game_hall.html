@@ -64,7 +64,7 @@
                 error : function(xhr) {
                     var resp_json = JSON.parse(xhr.responseText);
                     alert(resp_json["reason"]);
-                    window.location.assign("/login.html");
+                    location.assign("/login.html");
                 }
             })
         }
@@ -81,6 +81,10 @@
             var resp_json = JSON.parse(evt.data);
             if (resp_json["optype"] == "hall_ready") {
                 alert(resp_json["result"]);
+            } else if (resp_json["optype"] == "hall_unready") {
+                alert(info["result"]);
+                ws_hdl.close();
+                location.replace("/login.html");
             } else if (resp_json["optype"] == "match_start") {
                 console.log("start");
                 match_statu = "start";
@@ -91,7 +95,7 @@
                 match_event.innerHTML = "开始匹配";
             } else if (resp_json["optype"] == "match_success") {
                 alert(resp_json["result"]);
-                window.location.assign("/game_room.html");
+                location.assign("/game_room.html");
             } 
         }
         get_info();
